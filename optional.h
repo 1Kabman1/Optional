@@ -34,6 +34,9 @@ public:
 
     void Reset();
 
+    template <typename ... Args>
+    void Emplace(Args&& ...args);
+
     Optional &operator=(const T &item) {
         HasValue() ? (void) (*buff_ = item) : (void) (buff_ = new(&data_[0]) T(item), is_initialized_ = true);
         return *this;
@@ -80,6 +83,16 @@ private:
     alignas(T) char data_[sizeof(T)]{};
     bool is_initialized_ = false;
 };
+
+template <typename T>
+template <typename ... Args>
+void Optional<T>::Emplace(Args&& ...args) {
+
+    if (is_initialized_) {buff_->~T();}
+
+    buff_ = new (&data_[0]) T(std::forward<Args>(args)...);
+    is_initialized_ = true;
+}
 
 template<typename T>
 void Optional<T>::Reset() {
