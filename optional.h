@@ -28,9 +28,11 @@ public:
 
     bool HasValue() const;
 
-    T &Value();
+    T &Value() &;
 
-    const T &Value() const;
+    const T &Value() const & ;
+
+    T&&  Value() &&;
 
     void Reset();
 
@@ -69,13 +71,15 @@ public:
         return *this;
     }
 
-    T &operator*() { return Value(); }
+    T &operator*() & { return Value(); }
 
-    const T &operator*() const { return Value(); }
+    const T &operator*() const  &{ return Value(); }
 
     T *operator->() { return &Value(); }
 
     const T *operator->() const { return &Value(); }
+
+    T&& operator*() && {return std::move(Value());}
 
 private:
     T *buff_ = nullptr;
@@ -83,6 +87,15 @@ private:
     alignas(T) char data_[sizeof(T)]{};
     bool is_initialized_ = false;
 };
+
+template<typename T>
+T &&Optional<T>::Value() && {
+    if (!is_initialized_) {
+        throw BadOptionalAccess();
+    } else {
+        return std::move(*buff_);
+    }
+}
 
 template <typename T>
 template <typename ... Args>
@@ -100,7 +113,7 @@ void Optional<T>::Reset() {
 }
 
 template<typename T>
-const T &Optional<T>::Value() const {
+const T &Optional<T>::Value() const &{
     if (!is_initialized_) {
         throw BadOptionalAccess();
     } else {
@@ -109,7 +122,7 @@ const T &Optional<T>::Value() const {
 }
 
 template<typename T>
-T &Optional<T>::Value() {
+T &Optional<T>::Value() & {
     if (!is_initialized_) {
         throw BadOptionalAccess();
     } else {
